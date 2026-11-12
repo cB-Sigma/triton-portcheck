@@ -1,0 +1,19 @@
+# Shows the timeout and assembler-error statuses on a real kernel.
+# One 256x256x256 fp32 tile is far beyond what fits on a device; it is here
+# because it makes the compiler work hard.
+
+[defaults]
+targets = ["cuda:80", "cuda:90", "cuda:100", "hip:gfx942"]
+timeout = 15
+
+[[kernel]]
+name = "tile_matmul[32]"
+target = "kernels.py:tile_matmul"
+signature = { a_ptr = "*fp32", b_ptr = "*fp32", c_ptr = "*fp32" }
+constants = { M = 32, N = 32, K = 32 }
+
+[[kernel]]
+name = "tile_matmul[256]"
+target = "kernels.py:tile_matmul"
+signature = { a_ptr = "*fp32", b_ptr = "*fp32", c_ptr = "*fp32" }
+constants = { M = 256, N = 256, K = 256 }

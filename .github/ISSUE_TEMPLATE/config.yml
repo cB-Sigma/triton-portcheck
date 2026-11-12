@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Triton compiler bugs
+    url: https://github.com/triton-lang/triton/issues
+    about: If a kernel fails to compile and you think Triton is wrong, report it upstream. A portcheck report makes a good reproducer.

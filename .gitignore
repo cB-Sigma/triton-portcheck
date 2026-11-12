@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+
+# Environments
+.venv/
+venv/
+env/
+.envs/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# triton-portcheck outputs
+portcheck-report.json
+portcheck-report.md
+portcheck-report.xml
+portcheck-report.sarif
+portcheck-ir/
+.portcheck/
+
+# Triton
+.triton/
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

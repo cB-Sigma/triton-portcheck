@@ -1,0 +1,87 @@
+name: "triton-portcheck"
+description: "Compile Triton kernels across GPU targets and Triton versions on a CPU runner and report where they break."
+branding:
+  icon: "grid"
+  color: "green"
+
+inputs:
+  manifest:
+    description: "Path to the manifest (default: portcheck.toml in the working directory)."
+    required: false
+    default: ""
+  targets:
+    description: "Comma-separated targets, e.g. 'cuda:80,cuda:90,hip:gfx942'. Empty uses the manifest."
+    required: false
+    default: ""
+  triton:
+    description: "Comma-separated Triton versions, e.g. 'current,3.8.0'. Empty uses the manifest (default: current)."
+    required: false
+    default: ""
+  install-triton:
+    description: "pip requirement to install first, e.g. 'triton==3.9.0'. Empty installs nothing."
+    required: false
+    default: ""
+  baseline:
+    description: "Baseline file; with it only new failures fail the step."
+    required: false
+    default: ""
+  args:
+    description: "Extra arguments passed to `triton-portcheck check`."
+    required: false
+    default: ""
+  working-directory:
+    description: "Directory to run in."
+    required: false
+    default: "."
+
+outputs:
+  report:
+    description: "Path of the JSON report."
+    value: ${{ steps.check.outputs.report }}
+  exit-code:
+    description: "Exit code of triton-portcheck (0 no new failures, 1 new failures)."
+    value: ${{ steps.check.outputs.exit-code }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install triton-portcheck
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INSTALL_TRITON: ${{ inputs.install-triton }}
+      run: |
+        python -m pip install --quiet "$ACTION_PATH"
+        if [ -n "$INSTALL_TRITON" ]; then
+          python -m pip install --quiet "$INSTALL_TRITON"
+        fi
+
+    - name: Compile the portability matrix
+      id: check
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PORTCHECK_MANIFEST: ${{ inputs.manifest }}
+        PORTCHECK_TARGETS: ${{ inputs.targets }}
+        PORTCHECK_TRITON: ${{ inputs.triton }}
+        PORTCHECK_BASELINE: ${{ inputs.baseline }}
+        PORTCHECK_ARGS: ${{ inputs.args }}
+      run: |
+        out="${RUNNER_TEMP:-/tmp}/triton-portcheck"
+        mkdir -p "$out"
+        cmd=(triton-portcheck check)
+        if [ -n "$PORTCHECK_MANIFEST" ]; then cmd+=("$PORTCHECK_MANIFEST"); fi
+        if [ -n "$PORTCHECK_TARGETS" ]; then cmd+=(--target "$PORTCHECK_TARGETS"); fi
+        if [ -n "$PORTCHECK_TRITON" ]; then cmd+=(--triton "$PORTCHECK_TRITON"); fi
+        if [ -n "$PORTCHECK_BASELINE" ]; then cmd+=(--baseline "$PORTCHECK_BASELINE"); fi
+        cmd+=(--github --json "$out/report.json" --markdown "$out/report.md" --junit "$out/report.xml" --sarif "$out/report.sarif")
+        # shellcheck disable=SC2206
+        extra=($PORTCHECK_ARGS)
+        set +e
+        "${cmd[@]}" "${extra[@]}"
+        code=$?
+        set -e
+        if [ -f "$out/report.md" ] && [ -n "$GITHUB_STEP_SUMMARY" ]; then cat "$out/report.md" >> "$GITHUB_STEP_SUMMARY"; fi
+        echo "report=$out/report.json" >> "$GITHUB_OUTPUT"
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit "$code"

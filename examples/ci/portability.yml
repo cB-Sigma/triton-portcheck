@@ -1,0 +1,28 @@
+# Copy to .github/workflows/portability.yml in a repository that has a portcheck.toml.
+name: Triton portability
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  portcheck:
+    runs-on: ubuntu-latest   # CPU only
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the project and the Triton it supports
+        run: |
+          python -m pip install -e .
+          python -m pip install triton==3.9.0
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - uses: cb-Sigma/triton-portcheck@main
+        with:
+          targets: cuda:80,cuda:90,cuda:100,hip:gfx942,hip:gfx950
+          baseline: ci/portcheck-baseline.json

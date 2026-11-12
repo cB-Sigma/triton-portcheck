@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install ruff mypy pytest PyYAML types-PyYAML
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e . pytest PyYAML
+      - name: Unit tests (no Triton installed)
+        run: pytest -m "not compile"
+
+  compile:
+    name: compile (Triton on a CPU runner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e . pytest
+      - run: python -m pip install triton==3.9.0
+      - run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Integration tests (real compiles, no GPU)
+        run: pytest -m compile
+      - name: Demo matrix
+        run: triton-portcheck check --demo --markdown demo.md && cat demo.md >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: twine check --strict dist/*
+      - name: Wheel installs and the core imports without Triton
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+          /tmp/clean/bin/triton-portcheck --version
+          /tmp/clean/bin/python -c "import sys, triton_portcheck.cli; assert 'triton' not in sys.modules"

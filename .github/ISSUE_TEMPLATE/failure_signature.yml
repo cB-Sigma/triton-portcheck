@@ -1,0 +1,24 @@
+name: New failure signature
+description: A compile failure that deserves a clear explanation in reports.
+labels: [signature]
+body:
+  - type: textarea
+    id: message
+    attributes:
+      label: Raw error
+      description: The `detail` field of the cell from the JSON report, or the compiler output.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where it happens
+      description: Triton version(s) and target(s), e.g. "3.9.0, cuda:90 and cuda:120".
+    validations:
+      required: true
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream issue
+      description: Link to the triton-lang/triton issue, if one exists. Links are only added after someone reproduced the failure.

@@ -1,0 +1,22 @@
+# Captured by `triton-portcheck capture --mode interpret -- pytest -q -p no:cacheprovider .`.
+# 3 launches recorded, 3 distinct specialisations.
+
+[[kernel]]
+name = "scaled_add#1"
+target = "kernels.py:scaled_add"
+signature = { x_ptr = "*fp32", y_ptr = "*fp32", out_ptr = "*fp32", alpha = "fp32", n = "i32" }
+constants = { BLOCK = 128 }
+
+[[kernel]]
+name = "scaled_add#2"
+target = "kernels.py:scaled_add"
+signature = { x_ptr = "*fp16", y_ptr = "*fp16", out_ptr = "*fp16", alpha = "fp32", n = "i32" }
+constants = { BLOCK = 64 }
+attrs = { x_ptr = [["tt.divisibility", 16]], y_ptr = [["tt.divisibility", 16]], out_ptr = [["tt.divisibility", 16]], n = [["tt.divisibility", 16]] }
+
+[[kernel]]
+name = "row_softmax"
+target = "kernels.py:row_softmax"
+signature = { x_ptr = "*fp32", out_ptr = "*fp32", n_cols = "i32", stride = "i32" }
+constants = { WIDTH = 32 }
+options = { num_warps = 2 }

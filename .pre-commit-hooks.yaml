@@ -1,0 +1,17 @@
+- id: triton-portcheck
+  name: triton-portcheck (compile matrix)
+  description: Compile the kernels in portcheck.toml for every configured target; fails on new breakage.
+  entry: triton-portcheck check --quiet
+  language: python
+  pass_filenames: false
+  types: [python]
+  # Triton is not a dependency of the tool: add it where you use the hook, e.g.
+  #   additional_dependencies: ["triton==3.9.0"]
+
+- id: triton-portcheck-static
+  name: triton-portcheck (static pre-checks only)
+  description: Table-driven checks without compiling; a quick first pass that still needs Triton importable.
+  entry: triton-portcheck check --quiet --static-only
+  language: python
+  pass_filenames: false
+  types: [python]

@@ -1,0 +1,30 @@
+name: Bug report
+description: The tool misbehaved (wrong status, crash, confusing message).
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The manifest entry and, if you can share it, the kernel. The JSON report (`--json`) of the failing cell helps a lot.
+      render: toml
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `triton-portcheck --version` and `triton-portcheck targets` (first line), plus your OS.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is about triton-portcheck, not about a Triton compiler bug it surfaced (those belong upstream at triton-lang/triton).

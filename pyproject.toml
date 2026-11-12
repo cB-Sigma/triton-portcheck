@@ -1,0 +1,95 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "triton-portcheck"
+dynamic = ["version"]
+description = "Compile Triton kernels across GPU targets and Triton versions without a GPU, and report where each combination breaks."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "The triton-portcheck Authors" }]
+keywords = ["triton", "gpu", "compiler", "portability", "cuda", "rocm", "ci"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Compilers",
+  "Topic :: Software Development :: Testing",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6"]
+triton = ["triton>=3.8"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.10", "PyYAML>=6", "types-PyYAML", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/cb-Sigma/triton-portcheck"
+Issues = "https://github.com/cb-Sigma/triton-portcheck/issues"
+Changelog = "https://github.com/cb-Sigma/triton-portcheck/blob/main/CHANGELOG.md"
+
+[project.scripts]
+triton-portcheck = "triton_portcheck.cli:main"
+
+[tool.hatch.version]
+path = "src/triton_portcheck/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/triton_portcheck"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "examples", "docs", "README.md", "CHANGELOG.md", "LICENSE", "action.yml", ".pre-commit-hooks.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "compile: really compiles kernels with an installed Triton (skipped when Triton is absent)",
+  "slow: takes more than a few seconds",
+  "versions: needs a second Triton version environment",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "PIE", "RUF", "PT", "S"]
+ignore = [
+  "S101",   # assert is fine in tests and for narrowing
+  "S603",   # subprocess with our own argv
+  "S607",
+  "RUF001", # the reports use a few non-ASCII punctuation marks on purpose
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "E501"]
+"src/triton_portcheck/_child.py" = ["S102"]
+"src/triton_portcheck/demo/kernels.py" = ["RUF"]
+"examples/*" = ["S", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+files = ["src/triton_portcheck"]
+
+[[tool.mypy.overrides]]
+module = ["triton", "triton.*", "torch", "yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["triton_portcheck.demo.kernels"]
+ignore_errors = true
