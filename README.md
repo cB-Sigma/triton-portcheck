@@ -272,7 +272,7 @@ Every report format the tool writes repeats this, because a green matrix is easy
 
 | | |
 |---|---|
-| Triton versions compiled with | **3.9.0** and **3.8.0** (PyPI wheels, x86_64 Linux, Python 3.13) |
+| Triton versions compiled with | **3.9.0** and **3.8.0** (PyPI wheels, x86_64 Linux, Python 3.13; 3.9.0 also on Python 3.12) |
 | NVIDIA targets compiled for | `cuda:75`, `cuda:80`, `cuda:90`, `cuda:100`, `cuda:120` |
 | AMD targets compiled for | `hip:gfx942`, `hip:gfx950`, `hip:gfx1100`, `hip:gfx1250` |
 | Capture modes exercised | `interpret` and `record` with CPU torch 2.15 |

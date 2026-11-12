@@ -27,7 +27,7 @@ the backend defaults are dropped so the manifest stays portable across backends.
 
 **`interpret`** (default) sets `TRITON_INTERPRET=1`. Triton's interpreter runs each kernel on CPU tensors, so tests
 that compare results still pass. The interpreter does not specialise, so each launch is additionally fed to a shadow
-`JITFunction` whose compile is skipped; that is where the record comes from.
+`JITFunction` whose compile is skipped; that is where the record comes from. Interpret mode needs `numpy` in the environment that has Triton: the interpreter imports it, but Triton does not declare it as a dependency. `capture` stops with a clear message when it is missing.
 
 **`record`** installs the fake driver and returns "handled" from the hook. Kernels are specialised and then neither
 compiled nor launched. It is the fastest mode and works for code the interpreter cannot run, but output tensors are

@@ -6,6 +6,7 @@ import argparse
 import fnmatch
 import json
 import os
+import subprocess
 import sys
 import tempfile
 from collections.abc import Callable, Sequence
@@ -352,6 +353,15 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return EXIT_FAILURES if args.fail_on_regression and result.regressions else EXIT_OK
 
 
+def _has_module(python: str | os.PathLike[str], name: str) -> bool:
+    """Whether ``name`` can be found by the interpreter at ``python`` (without importing it)."""
+    probe = f"import importlib.util, sys; sys.exit(0 if importlib.util.find_spec({name!r}) else 1)"
+    try:
+        return subprocess.run([str(python), "-c", probe], capture_output=True, timeout=60, check=False).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
 def cmd_capture(args: argparse.Namespace) -> int:
     command = list(args.cmd)
     if command and command[0] == "--":
@@ -363,6 +373,12 @@ def cmd_capture(args: argparse.Namespace) -> int:
         return EXIT_USAGE
     output = Path(args.output)
     python = envs.base_python()
+    if args.mode == "interpret" and not _has_module(python, "numpy"):
+        _err(
+            "error: interpret mode needs numpy: Triton's CPU interpreter imports it, but Triton does not depend on it "
+            f"and it is not installed for {python}. Install numpy there, or use `--mode record`."
+        )
+        return EXIT_ENVIRONMENT
     with tempfile.TemporaryDirectory(prefix="tpc-capture-") as tmp:
         records_path = Path(tmp) / "records.jsonl"
         request = {

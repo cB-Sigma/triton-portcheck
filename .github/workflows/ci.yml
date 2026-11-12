@@ -49,7 +49,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e . pytest
-      - run: python -m pip install triton==3.9.0
+      # numpy: Triton's CPU interpreter imports it, and neither triton nor torch pulls it in.
+      - run: python -m pip install triton==3.9.0 numpy
       - run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Integration tests (real compiles, no GPU)
         run: pytest -m compile
